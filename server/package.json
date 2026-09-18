@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "test:integration": "node --test tests/integration.test.js",
+    "seed:demo": "node seed/demoOpportunities.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
