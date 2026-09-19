@@ -21,22 +21,69 @@ async function getOpportunities(req, res) {
 
   // We build the MongoDB filter object piece by piece. Any filter the user
   // didn't ask for simply isn't added - so an empty query means "show everything".
+  // We build the MongoDB filter object piece by piece. Any filter the user
+  // didn't ask for simply isn't added - so an empty query means "show everything".
   const filter = {};
+  // Conditions that themselves need an $or go in here instead of directly on
+  // `filter`, because `filter.$or = ...` written twice would just overwrite
+  // itself (same object key) - $and lets us combine several independent $or
+  // clauses safely.
+  const andConditions = [];
 
   if (search) {
     // $text uses the text index we defined on title+description in the model.
     filter.$text = { $search: search };
   }
   if (opportunityType) filter.opportunityType = opportunityType;
-  if (country) filter.country = country;
+
+  if (country) {
+    // Match against EITHER the country field OR the free-text location.
+    // Real-world reason: ingested job postings (see opportunitySources/
+    // greenhouse.js) almost never have a clean `country` - Greenhouse only
+    // gives us a location string like "Remote, Canada" or "Bengaluru". If we
+    // only checked `country`, every ingested job would silently fail to
+    // match no matter what was typed - it would look like the filter was
+    // broken, when really the data just didn't have that field filled in.
+    andConditions.push({
+      $or: [
+        { country: { $regex: country, $options: "i" } },
+        { location: { $regex: country, $options: "i" } },
+      ],
+    });
+  }
+
   if (remote !== undefined) filter.remote = remote === "true";
-  if (field) filter.field = field;
+  // Case-insensitive partial match - the frontend now sends one of the
+  // fixed labels from opportunitySources/greenhouse.js's FIELD_RULES (or an
+  // admin/demo-entered value), so this reliably matches real stored data
+  // instead of free text that may not exist anywhere in the database.
+  if (field) filter.field = { $regex: field, $options: "i" };
   if (funding) filter.funding = funding;
-  if (studyLevel) filter.studyLevel = studyLevel;
+
+  if (studyLevel) {
+    // Same "don't punish silence" principle the matching service uses:
+    // most REAL ingested job postings never state a study level at all
+    // (Greenhouse job titles don't say "Undergraduate" or "Graduate"). A
+    // strict `filter.studyLevel = studyLevel` would exclude every one of
+    // those - which is wrong, since the posting isn't saying "no
+    // undergrads", it's saying nothing. We only exclude an opportunity here
+    // if it explicitly lists study levels and this one isn't among them.
+    andConditions.push({
+      $or: [
+        { studyLevel: studyLevel },
+        { studyLevel: { $exists: false } },
+        { studyLevel: { $size: 0 } },
+      ],
+    });
+  }
 
   // Never show an opportunity whose deadline has passed on the main Discover
-  // list - a user asked to see things they can still apply to.
-  filter.$or = [{ deadline: { $gte: new Date() } }, { deadline: null }];
+  // list - a user asked to see things they can still apply to. Ingested job
+  // postings have no deadline at all (deadline: null), which is why this
+  // treats null as "still open" rather than excluding it.
+  andConditions.push({ $or: [{ deadline: { $gte: new Date() } }, { deadline: null }] });
+
+  if (andConditions.length > 0) filter.$and = andConditions;
 
   const sortOptions = {
     deadline: { deadline: 1 }, // closing soon first

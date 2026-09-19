@@ -10,6 +10,12 @@ const OPPORTUNITY_TYPES = [
   "Exchange Program", "Hackathon", "Competition", "Remote Job", "Graduate Program",
 ];
 
+const FIELD_OPTIONS = [
+  "Software Engineering", "Data & AI", "Security", "Product & Design",
+  "Sales", "Finance & Accounting", "People & Recruiting", "Marketing",
+  "Legal & Compliance", "Customer Success", "Other",
+];
+
 const initialFilters = {
   search: "", opportunityType: "", country: "", remote: "",
   field: "", funding: "", studyLevel: "", sort: "deadline", page: 1,
@@ -89,13 +95,15 @@ export default function Discover() {
               <option value="">All types</option>
               {OPPORTUNITY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
-            <input placeholder="Country" value={filters.country} onChange={(e) => updateFilter("country", e.target.value)} />
-            <select value={filters.remote} onChange={(e) => updateFilter("remote", e.target.value)}>
+            <input placeholder="Country (e.g. Kenya, Canada, Remote)" value={filters.country} onChange={(e) => updateFilter("country", e.target.value)} />            <select value={filters.remote} onChange={(e) => updateFilter("remote", e.target.value)}>
               <option value="">Remote or not</option>
               <option value="true">Remote only</option>
               <option value="false">On-site only</option>
             </select>
-            <input placeholder="Field" value={filters.field} onChange={(e) => updateFilter("field", e.target.value)} />
+            <select value={filters.field} onChange={(e) => updateFilter("field", e.target.value)}>
+            <option value="">All fields</option>
+            {FIELD_OPTIONS.map((f) => <option key={f} value={f}>{f}</option>)}
+            </select>
             <select value={filters.funding} onChange={(e) => updateFilter("funding", e.target.value)}>
               <option value="">Any funding</option>
               <option>Fully Funded</option>
