@@ -10,11 +10,12 @@ const OPPORTUNITY_TYPES = [
   "Exchange Program", "Hackathon", "Competition", "Remote Job", "Graduate Program",
 ];
 
-const FIELD_OPTIONS = [
-  "Software Engineering", "Data & AI", "Security", "Product & Design",
-  "Sales", "Finance & Accounting", "People & Recruiting", "Marketing",
-  "Legal & Compliance", "Customer Success", "Other",
-];
+// Broader groups of related fields - must match the group names (and their
+// members) in server/utils/fieldGroups.js. Selecting "Technology & Product"
+// finds backend, frontend, AI, security, AND product/design opportunities
+// together, instead of forcing a pick between many narrow, non-overlapping
+// labels that fragment what's really "the tech stuff" into separate options.
+const FIELD_OPTIONS = ["Technology & Product", "Business & Operations", "Other"];
 
 const initialFilters = {
   search: "", opportunityType: "", country: "", remote: "",

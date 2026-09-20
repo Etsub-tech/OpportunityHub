@@ -1,6 +1,6 @@
 const Opportunity = require("../models/Opportunity");
 const { checkEligibility } = require("../services/matchingService");
-
+const { FIELD_GROUPS } = require("../utils/fieldGroups");
 // GET /api/opportunities
 // Handles search, every filter, sorting, and pagination all in one query -
 // this is what makes it possible to scale to thousands of opportunities
@@ -57,7 +57,18 @@ async function getOpportunities(req, res) {
   // fixed labels from opportunitySources/greenhouse.js's FIELD_RULES (or an
   // admin/demo-entered value), so this reliably matches real stored data
   // instead of free text that may not exist anywhere in the database.
-  if (field) filter.field = { $regex: field, $options: "i" };
+  // Case-insensitive partial match by default - but if `field` is a known
+  // GROUP name (e.g. "Technology & Product"), match any of the several
+  // specific labels inside that group instead of one exact string. This is
+  // what lets selecting "Technology & Product" surface backend, frontend,
+  // AI, security, AND product/design opportunities together, rather than
+  // forcing a single narrow label that misses everything else nearby.
+  if (field) {
+    const groupMembers = FIELD_GROUPS[field];
+    filter.field = groupMembers
+      ? { $in: groupMembers }
+      : { $regex: field, $options: "i" }; // a specific/custom value, e.g. an admin-entered "Computer Science"
+  }
   if (funding) filter.funding = funding;
 
   if (studyLevel) {
