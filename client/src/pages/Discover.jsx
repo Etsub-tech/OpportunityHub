@@ -104,13 +104,6 @@ export default function Discover() {
             <option value="">All fields</option>
             {FIELD_OPTIONS.map((f) => <option key={f} value={f}>{f}</option>)}
             </select>
-            <select value={filters.funding} onChange={(e) => updateFilter("funding", e.target.value)}>
-              <option value="">Any funding</option>
-              <option>Fully Funded</option>
-              <option>Partially Funded</option>
-              <option>Paid</option>
-              <option>Unfunded</option>
-            </select>
             <select value={filters.studyLevel} onChange={(e) => updateFilter("studyLevel", e.target.value)}>
               <option value="">Any study level</option>
               <option>Undergraduate</option>
