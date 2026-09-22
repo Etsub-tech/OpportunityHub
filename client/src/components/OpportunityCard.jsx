@@ -31,6 +31,10 @@ export default function OpportunityCard({ opportunity, onSave, saving }) {
         <span className={`badge ${fundingClass[opportunity.funding] || "badge-neutral"}`}>
           💰 {opportunity.funding}
         </span>
+        {/* Shows exactly what field/department this opportunity got tagged
+            with, so a mismatch (or a missing tag) is visible at a glance
+            instead of being invisible internal data you have to guess about. */}
+        {opportunity.field && <span className="badge badge-neutral">🏷 {opportunity.field}</span>}
       </div>
 
       <div className="muted" style={{ fontSize: "0.85rem" }}>
